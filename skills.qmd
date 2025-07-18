@@ -9,16 +9,9 @@ execute:
   error: false    # suppress errors
 ---
 
-```{r, incude=FALSE, message=FALSE}
+```{r}
 library(tidyverse)
-library(here)
-library(readxl)
-library(janitor)
-library(conflicted)
-conflicts_prefer(dplyr::filter)
-conflicts_prefer(plotly::layout)
-source(here("R","functions.R"))
-source("richs_code.R")
+ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
 ```
 
 In order for the BC economy to thrive it is essential that the skills of the workforce match the needs of employers. However, the labour market is constantly evolving both in terms of occupational composition as well as the skills required for each specific occupation. In this note we focus exclusively on composition changes, and make the assumption that occupational skill profiles are constant.  This assumption is supported by data frequency: employment by occupation is available (and variable) monthly in the Labour Force Survey, whereas the O\*NET skills data uses a rolling update schedule, completing a full refresh of all occupations every five years. 
