@@ -1,3 +1,10 @@
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+library(conflicted)
+conflicts_prefer(dplyr::filter)
+source(here("R","functions.R"))
 ro <- list() #all of the objects created by richs code... to avoid namespace collisions
 
 ro$hoo <- read_excel(here("data","high-opportunity-occupations-bc-and-regions.xlsx"),
@@ -202,4 +209,4 @@ ro$teer_plt <- ggplot(ro$emp_teer, aes(x=year, y=employed, fill=teer)) +
        x=NULL,
        y=NULL)
 
-
+write_rds(ro, here("out", "richs_objects.rds"))
