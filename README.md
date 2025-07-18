@@ -1,3 +1,0 @@
-# personal_skills
-
-description

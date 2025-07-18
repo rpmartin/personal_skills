@@ -1,0 +1,76 @@
+---
+title: "Skills in the BC labour market"
+author: "Ermias Afeworki, Richard Martin"
+format: docx
+execute:
+  echo: false     # suppress code
+  warning: false  # suppress warnings
+  message: false  # suppress messages
+  error: false    # suppress errors
+---
+
+```{r, incude=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+library(readxl)
+library(janitor)
+library(conflicted)
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(plotly::layout)
+source(here("R","functions.R"))
+source("richs_code.R")
+```
+
+In order for the BC economy to thrive it is essential that the skills of the workforce match the needs of employers. However, the labour market is constantly evolving both in terms of occupational composition as well as the skills required for each specific occupation. In this note we focus exclusively on composition changes, and make the assumption that occupational skill profiles are constant.  This assumption is supported by data frequency: employment by occupation is available (and variable) monthly in the Labour Force Survey, whereas the O\*NET skills data uses a rolling update schedule, completing a full refresh of all occupations every five years. 
+
+The goal is to identify the skills that are becoming more important in the labour market.  We begin by quantifying the broad shifts in the labour market by looking at how the TEER composition has changed historically, and is forecast to change over the 10 years covered by the labour market outlook.  Once we have established the broad shifts in the labour market, we start the analysis by comparing the current skill profiles of HOOs (High Opportunity Occupations) to the rest of the labour market. Finally we look at how the distribution of skills is changing over time, both historically (2015-2024) and in the future (2025-2035).
+
+## A first look: breakdown by TEER
+
+We can get a preliminary idea of the changes in the labour market by looking at the breakdown of employment by TEER (Training, Education, Experience and Responsibilities) categories. The TEER system is a classification system used in Canada to categorize occupations based on the training, education, experience, and responsibilities required for each job. If the TEER composition of the labour market is changing over time, it indicates that the required skills are also changing.
+
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$teer_plt 
+```
+
+## High opportunity skills
+
+In recognition of the changing labour market, the British Columbia Labour Market Outlook identifies certain occupations as being High Opportunity Occupations (HOOs), on the basis of seven economic indicators. These indicators can be grouped into four categories, which are based on current and future labour market conditions. Each occupation is given a score based on its ranking in each of the seven economic indicators, and scores are weighted based on their labour market impact. The occupations are then sorted by score, and the 125 occupations with the highest scores become High Opportunity Occupations.  
+
+In what follows we create two weighted average skill profiles, one for the high opportunity occupations and one for the rest of the labour market (left panel below). It is evident that high opportunity occupations require higher skills, with a few exceptions e.g. repairing and equipement maintenance.  We then investigate the relative (middle panel) and absolute differences (right panel) in these two weighted average skill profiles, to identify what we will call high opportunity skills: the skills that have both relatively and absolutely higher scores in high opportunity occupations compared to the rest of the labour market: e.g. Science and Operations Analysis.  The relative differences are expressed as a ratio, while the absolute differences are expressed in points.
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$skills_plt
+```
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$relative_plt
+```
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$absolute_plt 
+```
+
+## Mean values and growth rates of skills
+
+An alternative way to investigate the changes in required skills over time is to look at the labour market as a whole, making comparisons across time. The measure that we compare is the weighted average of the skill scores, and then we calculate growth rates for the weighted average skill scores.  Specifically, we weight the occupation skill scores by the proportion of employed people in each occupation, in each year. This gives us a sense of how important each skill is currently, and how it is changing over time.  The following plot shows the weighted average skill scores in 2024 and the compound annual growth rate (CAGR) of these weighted average skill scores from 2015 to 2024, and from 2025 to 2035.
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$current_level
+```
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$historic_growth
+```
+
+```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+ro$future_growth 
+```
+
+## Skill Clusters
+
+
+
+
+
