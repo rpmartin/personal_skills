@@ -23,7 +23,7 @@ The goal is to identify the skills that are becoming more important in the labou
 We can get a preliminary idea of the changes in the labour market by looking at the breakdown of employment by TEER (Training, Education, Experience and Responsibilities) categories. The TEER system is a classification system used in Canada to categorize occupations based on the training, education, experience, and responsibilities required for each job. If the TEER composition of the labour market is changing over time, it indicates that the required skills are also changing.
 
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$teer_plt 
 ```
 
@@ -33,15 +33,15 @@ In recognition of the changing labour market, the British Columbia Labour Market
 
 In what follows we create two weighted average skill profiles, one for the high opportunity occupations and one for the rest of the labour market (left panel below). It is evident that high opportunity occupations require higher skills, with a few exceptions e.g. repairing and equipement maintenance.  We then investigate the relative (middle panel) and absolute differences (right panel) in these two weighted average skill profiles, to identify what we will call high opportunity skills: the skills that have both relatively and absolutely higher scores in high opportunity occupations compared to the rest of the labour market: e.g. Science and Operations Analysis.  The relative differences are expressed as a ratio, while the absolute differences are expressed in points.
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$skills_plt
 ```
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$relative_plt
 ```
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$absolute_plt 
 ```
 
@@ -49,15 +49,15 @@ ro$absolute_plt
 
 An alternative way to investigate the changes in required skills over time is to look at the labour market as a whole, making comparisons across time. The measure that we compare is the weighted average of the skill scores, and then we calculate growth rates for the weighted average skill scores.  Specifically, we weight the occupation skill scores by the proportion of employed people in each occupation, in each year. This gives us a sense of how important each skill is currently, and how it is changing over time.  The following plot shows the weighted average skill scores in 2024 and the compound annual growth rate (CAGR) of these weighted average skill scores from 2015 to 2024, and from 2025 to 2035.
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$current_level
 ```
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$historic_growth
 ```
 
-```{r, fig.width=8, fig.height=5, dpi=400, out.width="110%"}
+```{r, fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$future_growth 
 ```
 
