@@ -2,6 +2,7 @@ library(tidyverse)
 library(here)
 library(readxl)
 library(janitor)
+library(openxlsx)
 library(conflicted)
 conflicts_prefer(dplyr::filter)
 source(here("R","functions.R"))
@@ -15,11 +16,9 @@ ro$hoo <- read_excel(here("data","high-opportunity-occupations-bc-and-regions.xl
 ro$skills <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.xlsx"))|>
   clean_names()|>
   mutate(noc_5=str_pad(noc2021, 5, pad="0"), .before="noc2021")|>
-  select(noc_5, skills_competencies, importance_score, level_score)|>
-  mutate(composite_score = sqrt(importance_score * level_score)) |>
-  select(-importance_score, -level_score)|>
+  select(noc_5, skills_competencies, importance_score)|>
   group_by(skills_competencies)|>
-  nest(score_by_noc = c(noc_5, composite_score))
+  nest(score_by_noc = c(noc_5, importance_score))
 
 ro$hist_emp <- read_excel(here("data",
                             "Labour force status for 5 digit NOC (41229 split)2015-2024.xlsx"),
@@ -67,36 +66,10 @@ ro$crossed <- ro$joined|>
   nest()|>
   mutate(cagr= map_dbl(data, rich_cagr),
          last= map_dbl(data, rich_last)
-  )
+  )|>
+  select(-data)
+
 #weighted means over time----------------------------------
-ro$historic_growth <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
-  geom_col(alpha=.5)+
-  labs(title="Historic growth (2015-2024)",
-       x=NULL,
-       y=NULL,
-       caption = "Source: Skills data (ONET), Employment data (LFS)") +
-  scale_x_continuous(labels=scales::percent_format(accuracy=0.1))+
-  theme_minimal()+
-  theme(text=element_text(size=12))
-
-ro$future_growth <- ggplot(ro$crossed|>filter(source=="LMO"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
-  geom_col(alpha=.5)+
-  labs(title="Future growth (2025-2035) ",
-       x=NULL,
-       y=NULL,
-       caption = "Source: Skills data (ONET), Employment data (LMO)") +
-  scale_x_continuous(labels=scales::percent_format(accuracy=0.1))+
-  theme_minimal()+
-  theme(text=element_text(size=12))
-
-ro$current_level <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=last, y=fct_reorder(skills_competencies, last))) +
-  geom_col(alpha=.5)+
-  labs(title="Current (2024) skill scores",
-       x=NULL,
-       y=NULL,
-       caption = "Source: Skills data (ONET), Employment data (LFS)")+
-  theme_minimal()+
-  theme(text=element_text(size=12))
 
 ro$emp_teer <- ro$emp|>
   mutate(teer=str_sub(noc_5,2,2),
@@ -145,17 +118,67 @@ ro$not_hoo_weights <- ro$most_recent_emp|>
 ro$hoo_skills <- ro$skills_unnested|>
   right_join(ro$hoo_weights, by="noc_5")|>
   group_by(skills_competencies)|>
-  summarize(weighted_average = sum(composite_score * prop, na.rm = TRUE))|>
+  summarize(weighted_average = sum(importance_score * prop, na.rm = TRUE))|>
   mutate(group = "High Opportunity Occupations")|>
   na.omit()
 
 ro$not_hoo_skills <- ro$skills_unnested|>
   right_join(ro$not_hoo_weights, by="noc_5")|>
   group_by(skills_competencies)|>
-  summarize(weighted_average = sum(composite_score * prop, na.rm = TRUE))|>
+  summarize(weighted_average = sum(importance_score * prop, na.rm = TRUE))|>
   mutate(group = "Other Occupations")
 
 ro$skills <- bind_rows(ro$hoo_skills, ro$not_hoo_skills)
+
+ro$diffs <- ro$skills|>
+  pivot_wider(names_from=group, values_from=weighted_average)|>
+  mutate(absolute_diff = `High Opportunity Occupations` - `Other Occupations`,
+         relative_diff= `High Opportunity Occupations` / `Other Occupations`) |>
+  arrange(desc(relative_diff))
+
+#the plots-----------------------------------
+
+ro$emp_teer_plt <- ggplot(ro$emp_teer, aes(x=year, y=employed, fill=teer)) +
+  geom_area() +
+  geom_vline(xintercept = 2024.5) +
+  scale_fill_brewer(palette = "Dark2") +
+  scale_y_continuous(labels=scales::comma_format())+
+  theme_minimal()+
+  labs(title="Employment by TEER category",
+       subtitle="Historically, TEERs 0&1 growing rapidly, TEERs 2&3 constant share, TEERs 4&5 no growth.
+       Forecast: ordinal ranking of growth rates the same, but muted in magnitude.",
+       fill=NULL,
+       x=NULL,
+       y=NULL)
+
+ro$crossed_plt1 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=last, y=fct_reorder(skills_competencies, last))) +
+  geom_col(alpha=.5)+
+  labs(title="Current (2024) skill scores",
+       x=NULL,
+       y=NULL,
+       caption = "Source: Skills data (ONET), Employment data (LFS)")+
+  theme_minimal()+
+  theme(text=element_text(size=12))
+
+ro$crossed_plt2 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
+  geom_col(alpha=.5)+
+  labs(title="Historic growth (2015-2024)",
+       x=NULL,
+       y=NULL,
+       caption = "Source: Skills data (ONET), Employment data (LFS)") +
+  scale_x_continuous(labels=scales::percent_format(accuracy=0.1))+
+  theme_minimal()+
+  theme(text=element_text(size=12))
+
+ro$crossed_plt3 <- ggplot(ro$crossed|>filter(source=="LMO"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
+  geom_col(alpha=.5)+
+  labs(title="Future growth (2025-2035) ",
+       x=NULL,
+       y=NULL,
+       caption = "Source: Skills data (ONET), Employment data (LMO)") +
+  scale_x_continuous(labels=scales::percent_format(accuracy=0.1))+
+  theme_minimal()+
+  theme(text=element_text(size=12))
 
 ro$skills_plt <- ro$skills|>
   ggplot(aes(x=weighted_average, y=fct_reorder(skills_competencies, weighted_average), fill=group)) +
@@ -171,13 +194,7 @@ ro$skills_plt <- ro$skills|>
         legend.title = element_blank(),
         legend.box = "horizontal")
 
-ro$diffs <- ro$skills|>
-  pivot_wider(names_from=group, values_from=weighted_average)|>
-  mutate(absolute_diff = `High Opportunity Occupations` - `Other Occupations`,
-         relative_diff= `High Opportunity Occupations` / `Other Occupations`) |>
-  arrange(desc(relative_diff))
-
-ro$relative_plt <- ggplot(ro$diffs, aes(x=relative_diff, y=fct_reorder(skills_competencies, relative_diff))) +
+ro$diffs_plt1 <- ggplot(ro$diffs, aes(x=relative_diff, y=fct_reorder(skills_competencies, relative_diff))) +
   geom_vline(xintercept=1, color="grey70", lwd=.5)+
   geom_col(alpha=.5)+
   labs(title="HOO / Other",
@@ -187,7 +204,7 @@ ro$relative_plt <- ggplot(ro$diffs, aes(x=relative_diff, y=fct_reorder(skills_co
   theme_minimal() +
   theme(text=element_text(size=12))
 
-ro$absolute_plt <- ggplot(ro$diffs, aes(x=absolute_diff, y=fct_reorder(skills_competencies, absolute_diff))) +
+ro$diffs_plt2 <- ggplot(ro$diffs, aes(x=absolute_diff, y=fct_reorder(skills_competencies, absolute_diff))) +
   geom_col(alpha=.5)+
   labs(title="HOO - Other",
        x=NULL,
@@ -196,17 +213,29 @@ ro$absolute_plt <- ggplot(ro$diffs, aes(x=absolute_diff, y=fct_reorder(skills_co
   theme_minimal() +
   theme(text=element_text(size=12))
 
-ro$teer_plt <- ggplot(ro$emp_teer, aes(x=year, y=employed, fill=teer)) +
-  geom_area() +
-  geom_vline(xintercept = 2024.5) +
-  scale_fill_brewer(palette = "Dark2") +
-  scale_y_continuous(labels=scales::comma_format())+
-  theme_minimal()+
-  labs(title="Employment by TEER category",
-       subtitle="Historically, TEERs 0&1 growing rapidly, TEERs 2&3 constant share, TEERs 4&5 no growth.
-       Forecast: ordinal ranking of growth rates the same, but muted in magnitude.",
-       fill=NULL,
-       x=NULL,
-       y=NULL)
+ro <- enframe(ro)|>
+  filter(name %in% c("emp_teer", "crossed", "skills", "diffs",
+              "emp_teer_plt", "crossed_plt1", "crossed_plt2",
+              "crossed_plt3", "skills_plt", "diffs_plt1",
+              "diffs_plt2"))
 
-write_rds(ro, here("out", "richs_objects.rds"))
+ro|>
+  deframe()|>
+  write_rds(here("out", "richs_objects.rds"))
+
+ro|>
+  filter(name %in% c("emp_teer", "crossed", "skills", "diffs"))|>
+  mutate(name=case_when(name=="emp_teer"~"Skills Fig 1",
+                        name=="crossed"~"Skills Figs 2,3&4",
+                        name=="skills"~"Skills Fig 5",
+                        name=="diffs"~"Skills Figs 6&7"))|>
+  arrange(name)|>
+  deframe()|>
+  write.xlsx(file = here("out","skills_data.xlsx"))
+
+
+
+
+
+
+
