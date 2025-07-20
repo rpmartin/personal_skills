@@ -138,22 +138,26 @@ ro$diffs <- ro$skills|>
 
 #the plots-----------------------------------
 
+ro$cagr01 <- scales::percent(ro$emp_teer$cagr[ro$emp_teer$teer=="TEER 0&1" & ro$emp_teer$source=="LFS"][1], accuracy=0.1)
+ro$cagr23 <- scales::percent(ro$emp_teer$cagr[ro$emp_teer$teer=="TEER 2&3" & ro$emp_teer$source=="LFS"][1], accuracy=0.1)
+ro$cagr45 <- scales::percent(ro$emp_teer$cagr[ro$emp_teer$teer=="TEER 4&5" & ro$emp_teer$source=="LFS"][1], accuracy=0.1)
+
 ro$emp_teer_plt <- ggplot(ro$emp_teer, aes(x=year, y=employed, fill=teer)) +
-  geom_area() +
+  geom_area(alpha=.5) +
   geom_vline(xintercept = 2024.5) +
   scale_fill_brewer(palette = "Dark2") +
   scale_y_continuous(labels=scales::comma_format())+
   theme_minimal()+
-  labs(title="Employment by TEER category",
-       subtitle="Historically, TEERs 0&1 growing rapidly, TEERs 2&3 constant share, TEERs 4&5 no growth.
-       Forecast: ordinal ranking of growth rates the same, but muted in magnitude.",
+  labs(title="British Columbia Employment by TEER category",
+       subtitle=paste0("Historically, TEERs 0&1 growing rapidly (", ro$cagr01, ") TEERs 2&3 constant share (",ro$cagr23,"), TEERs 4&5 no growth (",ro$cagr45,")\nForecast: ordinal ranking of growth rates the same, but muted in magnitude."),
        fill=NULL,
        x=NULL,
        y=NULL)
 
 ro$crossed_plt1 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=last, y=fct_reorder(skills_competencies, last))) +
   geom_col(alpha=.5)+
-  labs(title="Current (2024) skill scores",
+  labs(title="Weighted averages skills:",
+       subtitle="Current (2024) employment proportions for weights.",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LFS)")+
@@ -162,7 +166,7 @@ ro$crossed_plt1 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=last, y=fct_r
 
 ro$crossed_plt2 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
   geom_col(alpha=.5)+
-  labs(title="Historic growth (2015-2024)",
+  labs(title="Historic growth (2015-2024) in weighted average skills",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LFS)") +
@@ -172,7 +176,7 @@ ro$crossed_plt2 <- ggplot(ro$crossed|>filter(source=="LFS"), aes(x=cagr, y=fct_r
 
 ro$crossed_plt3 <- ggplot(ro$crossed|>filter(source=="LMO"), aes(x=cagr, y=fct_reorder(skills_competencies, cagr))) +
   geom_col(alpha=.5)+
-  labs(title="Future growth (2025-2035) ",
+  labs(title="Future growth (2025-2035) in weighted average skills",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LMO)") +
@@ -183,7 +187,8 @@ ro$crossed_plt3 <- ggplot(ro$crossed|>filter(source=="LMO"), aes(x=cagr, y=fct_r
 ro$skills_plt <- ro$skills|>
   ggplot(aes(x=weighted_average, y=fct_reorder(skills_competencies, weighted_average), fill=group)) +
   geom_col(position="dodge", alpha=.5, width=.7) +
-  labs(title="Weighted average skill scores",
+  labs(title="Comparison between weighted average skill scores:",
+       subtitle="High opportunity occupations vs. other occupations",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LMO 2025) ") +
@@ -197,7 +202,8 @@ ro$skills_plt <- ro$skills|>
 ro$diffs_plt1 <- ggplot(ro$diffs, aes(x=relative_diff, y=fct_reorder(skills_competencies, relative_diff))) +
   geom_vline(xintercept=1, color="grey70", lwd=.5)+
   geom_col(alpha=.5)+
-  labs(title="HOO / Other",
+  labs(title="Relative skill differences:",
+  subtitle="High opportunity occupations vs. other occupations.",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LMO) ") +
@@ -206,7 +212,8 @@ ro$diffs_plt1 <- ggplot(ro$diffs, aes(x=relative_diff, y=fct_reorder(skills_comp
 
 ro$diffs_plt2 <- ggplot(ro$diffs, aes(x=absolute_diff, y=fct_reorder(skills_competencies, absolute_diff))) +
   geom_col(alpha=.5)+
-  labs(title="HOO - Other",
+  labs(title="Absolute skill differences:",
+       subtitle="High Opportunity Occupations vs. other occupations.",
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LMO) ") +
@@ -234,7 +241,7 @@ ro|>
   write.xlsx(file = here("out","skills_data.xlsx"))
 
 
-
+#
 
 
 

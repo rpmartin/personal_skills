@@ -15,6 +15,9 @@ execute:
 ```{r}
 library(tidyverse)
 ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
+if (file.info(here::here("out","richs_objects.rds"))$mtime < file.info("01_source_rich.R")$mtime) {
+  stop("richs_objects.rds is stale — rerun 01_source_rich.R")
+}
 ```
 
 `r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")`
