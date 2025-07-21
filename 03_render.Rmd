@@ -1,24 +1,28 @@
 ---
 title: "Skills in the BC labour market"
 author: "Ermias Afeworki, Richard Martin"
-format: 
-  docx:
+output:
+  bookdown::word_document2:
     fig_caption: true
     fig_caption_location: bottom
-execute:
-  echo: false     # suppress code
-  warning: false  # suppress warnings
-  message: false  # suppress messages
-  error: false    # suppress errors
-output-file: "Skills in the BC labour market"
+    toc: false           # optional: add if you want a TOC
+    number_sections: false # optional: number sections or not
+    reference_docx: null  # optional: specify your Word template here
 ---
 
-```{r}
-library(tidyverse)
-ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
+```{r, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE
+)
+
 if (file.info(here::here("out","richs_objects.rds"))$mtime < file.info("01_source_rich.R")$mtime) {
   stop("richs_objects.rds is stale — rerun 01_source_rich.R")
 }
+library(tidyverse)
+ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
 ```
 
 `r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")`
@@ -40,9 +44,9 @@ ro$emp_teer_plt
 
 In recognition of the changing labour market, the British Columbia Labour Market Outlook identifies certain occupations as being High Opportunity Occupations (HOOs), on the basis of seven economic indicators. These indicators can be grouped into four categories, which are based on current and future labour market conditions. Each occupation is given a score based on its ranking in each of the seven economic indicators, and scores are weighted based on their labour market impact. The occupations are then sorted by score, and the 125 occupations with the highest scores become High Opportunity Occupations.
 
-In what follows we create two weighted average skill profiles, one for the high opportunity occupations and one for the rest of the labour market (left panel below). It is evident that high opportunity occupations require higher skills, with a few exceptions e.g. repairing and equipement maintenance. We then investigate the relative (middle panel) and absolute differences (right panel) in these two weighted average skill profiles, to identify what we will call high opportunity skills: the skills that have both relatively and absolutely higher scores in high opportunity occupations compared to the rest of the labour market: e.g. Science and Operations Analysis. The relative differences are expressed as a ratio, while the absolute differences are expressed in points.
+In what follows we create two weighted average skill profiles, one for the high opportunity occupations and one for the rest of the labour market  \@fig.fig2. It is evident that high opportunity occupations require higher skills, with a few exceptions e.g. repairing and equipement maintenance. We then investigate the relative (middle panel) and absolute differences (right panel) in these two weighted average skill profiles, to identify what we will call high opportunity skills: the skills that have both relatively and absolutely higher scores in high opportunity occupations compared to the rest of the labour market: e.g. Science and Operations Analysis. The relative differences are expressed as a ratio, while the absolute differences are expressed in points.
 
-```{r, fig2, fig.cap="Skills Fig 2", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
+```{r, fig.cap='Skills Fig 2. (#fig.fig2)', fig.width=9, fig.height=11, dpi=400, out.width="110%"}
 ro$skills_plt
 ```
 

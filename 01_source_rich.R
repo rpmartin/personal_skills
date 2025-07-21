@@ -192,7 +192,7 @@ ro$skills_plt <- ro$skills|>
        x=NULL,
        y=NULL,
        caption = "Source: Skills data (ONET), Employment data (LMO 2025) ") +
-  scale_fill_manual(values=c("High Opportunity Occupations"="#1f77b4", "Other Occupations"="#ff7f0e")) +
+  scale_fill_brewer(palette = "Dark2") +
   theme_minimal() +
   theme(text=element_text(size=12)) +
   theme(legend.position = "bottom",
