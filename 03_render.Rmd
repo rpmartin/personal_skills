@@ -25,8 +25,7 @@ library(tidyverse)
 ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
 ```
 
-`r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")`
-
+`r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")#timestamp handy while developing`
 
 In order for the BC economy to thrive it is essential that the skills of the workforce match the needs of employers. However, the labour market is constantly evolving both in terms of occupational composition as well as the skills required for each specific occupation. In this note we focus exclusively on composition changes, and make the assumption that occupational skill profiles are constant. This assumption is supported by data frequency: employment by occupation is available (and variable) monthly in the Labour Force Survey, whereas the O\*NET skills data uses a rolling update schedule, completing a full refresh of all occupations every five years.
 
@@ -34,7 +33,7 @@ The goal is to identify the skills that are becoming more important in the labou
 
 ## A first look: breakdown by TEER
 
-We can get a preliminary idea of the changes in the labour market by looking at the breakdown of employment by TEER (Training, Education, Experience and Responsibilities) categories. The TEER system is a classification system used in Canada to categorize occupations based on the training, education, experience, and responsibilities required for each job. If the TEER composition of the labour market is changing over time, it indicates that the required skills are also changing.
+We can get a preliminary idea of the changes in the labour market by looking at the breakdown of employment by TEER (Training, Education, Experience and Responsibilities) categories. The TEER system is a classification system used in Canada to categorize occupations based on the training, education, experience, and responsibilities required for each jobb. If the TEER composition of the labour market is changing over time, it indicates that the required skills are also changing.
 
 ```{r, fig1, fig.cap="Employment by TEER groupings", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 ro$emp_teer_plt 
