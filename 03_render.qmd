@@ -10,6 +10,7 @@ execute:
   warning: false  # suppress warnings
   message: false  # suppress messages
   error: false    # suppress errors
+output-file: "Skills in the BC labour market"
 ---
 
 ```{r}
