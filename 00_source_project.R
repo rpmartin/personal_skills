@@ -5,4 +5,3 @@ rmarkdown::render(
   output_format = "bookdown::word_document2",
   output_file = "Skills_in_the_BC_labour_market"
 )
-
