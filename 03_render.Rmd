@@ -23,6 +23,11 @@ if (file.info(here::here("out","richs_objects.rds"))$mtime < file.info("01_sourc
 }
 library(tidyverse)
 ro <- readr::read_rds(here::here("out", "richs_objects.rds"))
+
+all_occs_chart <- read_rds(here::here("out", "all_occs_chart.rds"))
+plot_upper <- read_rds( here::here("out", "plot_upper.rds"))
+plot_lower <- read_rds(here::here("out", "plot_lower.rds"))
+
 ```
 
 `r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")#timestamp handy while developing`
@@ -74,3 +79,20 @@ ro$crossed_plt3
 ```
 
 ## Skill Clusters
+
+
+
+Below are the skills clusters and analysis
+
+```{r, fig8, fig.cap="All Occupations: Percent of Job Openings 2025", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
+all_occs_chart
+```
+
+```{r, fig9, fig.cap="Management and University", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
+plot_upper
+```
+
+```{r fig10, fig.cap="College/Apprenticeship and Highschool or less", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
+plot_lower
+```
+
