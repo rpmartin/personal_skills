@@ -80,9 +80,8 @@ ro$crossed_plt3
 
 ## Skill Clusters
 
-
-
-Below are the skills clusters and analysis
+Below are the skills clusters and analysis.
+Add more stuff here
 
 ```{r, fig8, fig.cap="All Occupations: Percent of Job Openings 2025", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
 all_occs_chart
