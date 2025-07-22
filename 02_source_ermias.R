@@ -10,12 +10,12 @@ library(tibble)
 
 
 # Load skills data
-skills_df <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.xlsx")) |> 
+skills_df <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.xlsx")) |>
   clean_names()|>
-  rename(Occupation = noc2021_title, Skill = skills_competencies, Importance = importance_score) |> 
+  rename(Occupation = noc2021_title, Skill = skills_competencies, Importance = importance_score) |>
   mutate(noc_5=str_pad(noc2021, 5, pad="0"), .before="noc2021")|>
   select(noc_5, Occupation, Skill, Importance )
- 
+
 
 # TEER groups
 
@@ -73,14 +73,14 @@ skill_clusters <- tribble(
   "Systems Analysis", "Analytical",
   "Systems Evaluation", "Analytical",
   "Writing", "Analytical",
-  
+
   "Coordination", "Management",
   "Management of Financial Resources", "Management",
   "Management of Material Resources", "Management",
   "Management of Personnel Resources", "Management",
   "Monitoring", "Management",
   "Time Management", "Management",
-  
+
   "Equipment Maintenance", "Technical",
   "Equipment Selection", "Technical",
   "Installation", "Technical",
@@ -89,13 +89,13 @@ skill_clusters <- tribble(
   "Quality Control Analysis", "Technical",
   "Repairing", "Technical",
   "Troubleshooting", "Technical",
-  
+
   "Mathematics", "STEM",
   "Operations Analysis", "STEM",
   "Programming", "STEM",
   "Science", "STEM",
   "Technology Design", "STEM",
-  
+
   "Negotiation", "Social",
   "Persuasion", "Social",
   "Service Orientation", "Social",
@@ -108,9 +108,9 @@ skill_clusters <- tribble(
 skills_df <- skills_df %>%
   mutate(TEER = as.character(substr(noc_5, 2, 2)),
          NOC_Major = substr(as.character(noc_5), 1, 1)
-  ) |>  
-  left_join(teer_group_labels, by = "TEER") |> 
-  left_join(noc_major_map, by = "NOC_Major") |> 
+  ) |>
+  left_join(teer_group_labels, by = "TEER") |>
+  left_join(noc_major_map, by = "NOC_Major") |>
   left_join(skill_clusters, by = "Skill")
 
 
@@ -122,18 +122,35 @@ skills_df <- skills_df %>%
 
 # Load Job Openings and group by occupation (total job openings)
 
-job_openings_df <- vroom(here("data","job_proj_data.csv"), delim = ",") |> 
+job_openings_df <- vroom(here("data","job_proj_data.csv"), delim = ",") |>
   filter(Industry == "All industries", Region == "British Columbia", Occupation != "Total") |>
-  mutate(Occupation = case_when(Occupation == "Seniors managers - public and private sector" ~ "Senior managers - public and private sector", TRUE ~ Occupation)) |> 
+  mutate(Occupation = case_when(Occupation == "Seniors managers - public and private sector" ~ "Senior managers - public and private sector", TRUE ~ Occupation)) |>
   select(Occupation,`NOC2 Label`, Year, Openings) |>  # Keep rows with valid JO
-  group_by(Occupation) |> 
-  summarise(Openings_10yr = sum(Openings, na.rm = TRUE), .groups = "drop") |> 
-  ungroup()
+  group_by(Occupation) |>
+  summarise(Openings_10yr = sum(Openings, na.rm = TRUE), .groups = "drop") |>
+  ungroup()|>
+  arrange(Occupation)
+#rich's version of job openings
+job_openings_rich <- read_excel(here("data","job_openings_occupation.xlsx"), skip=3)|>
+  filter(NOC !="#T",
+         `Geographic Area`=="British Columbia",
+         Variable=="Job Openings")|>
+  pivot_longer(cols=starts_with("2"),
+               names_to="year",
+               values_to="value")|>
+  group_by(Occupation=Description) |>
+  summarize(Openings_10yr = sum(value, na.rm = TRUE), .groups = "drop")|>
+  arrange(Occupation)|>
+  mutate(Occupation = str_replace_all(Occupation, "Seniors managers - public and private sector", "Senior managers - public and private sector"))
+#test for equality
+joined <- full_join(job_openings_df, job_openings_df2, by = "Occupation")|>
+  mutate(diff=Openings_10yr.x - Openings_10yr.y)|>
+  arrange(desc(diff))
+#Looks like you doubled the job openings for two occupations???
 
-
-skills_jo_df <- skills_df |> 
-  left_join(job_openings_df, by = "Occupation") |> 
-  mutate(Openings_10yr = replace_na(Openings_10yr, 0)) 
+skills_jo_df <- skills_df |>
+  left_join(job_openings_df, by = "Occupation") |>
+  mutate(Openings_10yr = replace_na(Openings_10yr, 0))
 
 
 # Data Analysis and Summary
@@ -146,7 +163,7 @@ cluster_scores <- skills_jo_df %>%
     weighted_importance = weighted.mean(Importance, Openings_10yr, na.rm = TRUE),
     Openings_10yr = first(Openings_10yr),
     .groups = "drop"
-  ) 
+  )
 
 
 # Step 2: Categorize importance level
@@ -164,30 +181,30 @@ cluster_scores <- cluster_scores %>%
 
 teer_table <- function(x = NULL) {
   y <- cluster_scores %>%
-    { if (!is.null(x)) filter(., teer_group == x) else . } |> 
-    group_by(Skill_Group, Importance_Rank) |> 
+    { if (!is.null(x)) filter(., teer_group == x) else . } |>
+    group_by(Skill_Group, Importance_Rank) |>
     summarise(
       Total_Openings = sum(Openings_10yr, na.rm = TRUE),
       Occupation_Count = n(),  # Or use n_distinct(Occupation)
       .groups = "drop"
-    ) |> 
-    group_by(Skill_Group) |> 
+    ) |>
+    group_by(Skill_Group) |>
     mutate(
       Total_Openings_All = sum(Total_Openings),
       Percent_Openings = round((Total_Openings / Total_Openings_All * 100), 0)
-    ) |> 
+    ) |>
     ungroup()
-  
+
   # Fixed order for Skill_Group
   fixed_order <- c("Technical", "STEM", "Management", "Social", "Analytical")
   y$Skill_Group <- factor(y$Skill_Group, levels = fixed_order)
-  
+
   # Fixed order for Importance_Rank
   y$Importance_Rank <- factor(
     y$Importance_Rank,
     levels = c("Less Important","Moderately Important", "Important")
   )
-  
+
   return(y)
 }
 
@@ -229,7 +246,7 @@ all_occs_chart <-  ggplot(all_teer_nofilter, aes(x = Percent_Openings , y = Skil
 
 all_occs_chart
 
-# Plot by Facet Wrap   
+# Plot by Facet Wrap
 
 upper_teer <- all_teer |> filter(teer_group %in% c("Management", "University"))
 lower_teer <- all_teer |> filter(teer_group %in% c("College/Apprenticeship", "High School or less"))
