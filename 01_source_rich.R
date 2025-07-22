@@ -8,9 +8,10 @@ conflicts_prefer(dplyr::filter)
 source(here("R","functions.R"))
 ro <- list() #all of the objects created by richs code... to avoid namespace collisions
 
-ro$hoo <- read_excel(here("data","high-opportunity-occupations-bc-and-regions.xlsx"),
-                  sheet = "HOO BC")|>
-  select(noc_5=NOC)|>
+ro$hoo <- read_excel(here("data","LMO 2025E HOO Result.xlsx"), skip=3)|>
+  select(noc_5=contains("code"),hoo=contains("HOO"))|>
+  filter(hoo=="HOO BC")|>
+  select(noc_5)|>
   mutate(noc_5=str_remove_all(noc_5, "#"))
 
 ro$skills <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.xlsx"))|>
