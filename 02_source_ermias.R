@@ -122,16 +122,7 @@ skills_df <- skills_df %>%
 
 # Load Job Openings and group by occupation (total job openings)
 
-job_openings_df <- vroom(here("data","job_proj_data.csv"), delim = ",") |>
-  filter(Industry == "All industries", Region == "British Columbia", Occupation != "Total") |>
-  mutate(Occupation = case_when(Occupation == "Seniors managers - public and private sector" ~ "Senior managers - public and private sector", TRUE ~ Occupation)) |>
-  select(Occupation,`NOC2 Label`, Year, Openings) |>  # Keep rows with valid JO
-  group_by(Occupation) |>
-  summarise(Openings_10yr = sum(Openings, na.rm = TRUE), .groups = "drop") |>
-  ungroup()|>
-  arrange(Occupation)
-#rich's version of job openings
-job_openings_rich <- read_excel(here("data","job_openings_occupation.xlsx"), skip=3)|>
+job_openings_df <- read_excel(here("data","job_openings_occupation.xlsx"), skip=3)|>
   filter(NOC !="#T",
          `Geographic Area`=="British Columbia",
          Variable=="Job Openings")|>
@@ -142,11 +133,6 @@ job_openings_rich <- read_excel(here("data","job_openings_occupation.xlsx"), ski
   summarize(Openings_10yr = sum(value, na.rm = TRUE), .groups = "drop")|>
   arrange(Occupation)|>
   mutate(Occupation = str_replace_all(Occupation, "Seniors managers - public and private sector", "Senior managers - public and private sector"))
-#test for equality
-joined <- full_join(job_openings_df, job_openings_df2, by = "Occupation")|>
-  mutate(diff=Openings_10yr.x - Openings_10yr.y)|>
-  arrange(desc(diff))
-#Looks like you doubled the job openings for two occupations???
 
 skills_jo_df <- skills_df |>
   left_join(job_openings_df, by = "Occupation") |>
