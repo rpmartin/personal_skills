@@ -173,9 +173,6 @@ cluster_scores <- cluster_scores %>%
     )
   )
 
-
-
-
 teer_table <- function(x = NULL) {
   y <- cluster_scores %>%
     { if (!is.null(x)) filter(., teer_group == x) else . } |>
