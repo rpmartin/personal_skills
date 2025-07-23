@@ -135,7 +135,7 @@ job_openings_df <- read_excel(here("data","job_openings_occupation.xlsx"), skip=
   mutate(Occupation = str_replace_all(Occupation, "Seniors managers - public and private sector", "Senior managers - public and private sector"))
 
 skills_jo_df <- skills_df |>
-  left_join(job_openings_df, by = "Occupation") |>
+  left_join(job_openings_df, by = "Occupation")|>
   mutate(Openings_10yr = replace_na(Openings_10yr, 0))
 
 
@@ -151,6 +151,17 @@ cluster_scores <- skills_jo_df %>%
     .groups = "drop"
   )
 
+cluster_scores_unweighted <- skills_jo_df %>%
+  group_by(Occupation, Skill_Group, teer_group) %>%
+  summarise(
+    unweighted_importance = mean(Importance, na.rm = TRUE),
+    Openings_10yr = first(Openings_10yr),
+    .groups = "drop"
+  )
+
+cluster_scores_check <- full_join(cluster_scores, cluster_scores_unweighted, by = c("Occupation", "Skill_Group", "teer_group", "Openings_10yr")) |>
+  mutate(diff = round(abs(weighted_importance - unweighted_importance), 4)) |>
+  arrange(desc(diff))
 
 # Step 2: Categorize importance level
 cluster_scores <- cluster_scores %>%
@@ -161,9 +172,6 @@ cluster_scores <- cluster_scores %>%
       TRUE ~ "Less Important"
     )
   )
-
-
-
 
 teer_table <- function(x = NULL) {
   y <- cluster_scores %>%
@@ -190,7 +198,7 @@ teer_table <- function(x = NULL) {
     y$Importance_Rank,
     levels = c("Less Important","Moderately Important", "Important")
   )
-
+  browser()
   return(y)
 }
 
