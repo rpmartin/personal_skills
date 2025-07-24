@@ -41,7 +41,7 @@ skill_clusters <- read_excel(here("out", "skill_clusters_data.xlsx"), sheet = "s
 
 `r format(lubridate::now(), "%Y-%m-%d %H:%M:%S")#timestamp handy while developing`
 
-In order for the BC economy to thrive it is essential that the skills of the workforce match the needs of employers. However, the labour market is constantly evolving both in terms of occupational composition as well as the skills required for each specific occupation. In this note we focus exclusively on composition changes, and make the assumption that occupational skill profiles are constant. This assumption is supported by data frequency: employment by occupation is available (and variable) monthly in the Labour Force Survey, whereas the O\*NET skills data uses a rolling update schedule, completing a full refresh of all occupations every five years.
+In order for the BC economy to thrive it is essential that the skills of the workforce match the needs of employers. However, the labour market is constantly evolving both in terms of occupational composition as well as the skills required for each specific occupation. In this note we focus exclusively on composition changes, and make the assumption that occupational skill profiles are constant. This assumption is supported by data frequency: employment by occupation is available (and variable) monthly in the Labour Force Survey, whereas the O\*NET^[While O\*NET provides both importance and level ratings for skills and competencies, we focus on importance ratings in this report, as the two measures are highly correlated.]  skills data uses a rolling update schedule, completing a full refresh of all occupations every five years.
 
 The goal is to identify the skills that are becoming more important in the labour market. We begin by quantifying the broad shifts in the labour market by looking at how the TEER composition has changed historically, and is forecast to change over the 10 years covered by the Labour Market Outlook. Once we have established the broad shifts in the labour market, we then compare the current skill profiles of High Opportunity Occupations to the rest of the labour market. Finally we look at how the distribution of skills is changing over time, both historically (2015-2024) and in the future (2025-2035).
 
@@ -91,23 +91,16 @@ ro$crossed_plt3
 
 The nature of work is shifting in British Columbia, driven by technological and demographic changes. Regarding technology, both automation and artificial intelligence are transforming how work is done, while demographic changes include an aging population and the increasing importance of diversity and inclusion in the workplace.  Understanding which occupational skills will be important in the jobs of the future is essential for helping job seekers and employers adapt to the evolving economy and labour market. This information is also valuable for educators and policymakers in designing programs that equip the future workforce with the skills and competencies needed for success over the next ten years. In previous labour market reports, we analyzed the demand for individual skills (2022 LMO) and occupational clusters based on skill profiles (2023 LMO).  
 
-While deriving the occupational clusters we discovered that many of the ONET skills and competencies are highly correlated: they essentially are duplicate measures of the same underlying skill. This high correlation among skills suggests that they are often used together in similar ways across different occupations.  For example, our analysis shows that the correlation coefficient among the ‘Social’ skills exceeds 0.9. As a result, this report shifts focus from individual skills to clustering skills based on their usage patterns across occupations.
+While deriving the occupational clusters (LMO 2023) we discovered that many of the O\*NET skills and competencies are highly correlated: they essentially are duplicate measures of the same underlying skill. This high correlation among skills suggests that they are often used together in similar ways across different occupations.  For example, our analysis shows that the correlation coefficient among the ‘Social’ skills exceeds 0.9. As a result, this report shifts focus from individual skills to clustering skills based on their usage patterns across occupations.
 
-While many clustering techniques are available to group observations (such as the 11 occupational clusters in the 2023 LMO), it is a less common task to cluster variables (the skill measures).  To do so we utilized the R clustering package ClustOfVar, developed by Chavent et al. (2012), and validated our results using another R package, ClustVarLV, developed by Vigneau and Qannari (2003). While O*NET provides both importance and level ratings for skills and competencies, we focus on importance ratings in this report, as the two measures are highly correlated.
+While many clustering techniques are available to group observations (such as the 11 occupational clusters in the 2023 LMO), it is a less common task to cluster variables (the skill measures).  To do so we utilized the R clustering package ClustOfVar, developed by Chavent et al. (2012), and validated our results using another R package, ClustVarLV, developed by Vigneau and Qannari (2003). 
 
 The resulting skill clusters revealed distinct groupings, which we termed Analytical, Managerial, Social, STEM, and Technical skill clusters. These clusters offer a more interpretable and actionable framework for understanding future skills demand.
 
-To assess the importance of each skill cluster within occupations, we calculated the average importance score for each cluster. We then applied standardized thresholds to interpret these scores, using O*NET’s anchor-based scale:
+To assess the importance of each skill cluster within occupations, we calculated the average importance score for each cluster. We then applied standardized thresholds to interpret these scores, using O\*NET’s anchor-based scale:
 •	Important: ≥ 50
 •	Moderately Important: 25–49
 •	Less Important: < 25
-
-To validate this approach, we compared the distribution of average skill cluster scores with the original O*NET importance ratings for individual skills. Statistically, the 25th, 50th, and 75th percentiles of the cluster scores were approximately 25.0, 38.6, and 50.7, respectively, closely aligning with the fixed thresholds. Visually, both distributions showed similar peaks near 25 and 50, despite the cluster-level scores being smoother and more compressed due to averaging. This reinforces the validity of our categorization while acknowledging that extreme values are less likely after aggregation (Figure \@ref(fig:fig8)).
-
-
-```{r, fig8, fig.cap="Comparison of skill importance distributions", fig.width=9, fig.height=5.5, dpi=400, out.width="110%"}
-plot_dist
-```
 
 Next, we linked the average cluster scores to projected job openings, enabling us to identify which skill clusters are most likely to be in demand over the next decade. Finally, we presented results for all occupations and provided disaggregated insights by grouping occupations according to the Training, Education, Experience, and Responsibilities (TEER) framework.
 
@@ -135,7 +128,7 @@ plot_lower
 ```
 
 ```{r, echo=FALSE, results='asis'}
-cat(rep("\n\n&nbsp;\n\n", 15), sep = "") #hack to force the table onto next page... can't do pagebreaks with bookdown
+#cat(rep("\n\n&nbsp;\n\n", 15), sep = "") #hack to force the table onto next page... can't do pagebreaks with bookdown
 ```
 
 
