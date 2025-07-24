@@ -1,3 +1,5 @@
+#' This script creates the objects for rich's part of the analysis.
+#' All functions start with rich_ and all objects stored in a list called ro.
 library(tidyverse)
 library(here)
 library(readxl)
@@ -8,12 +10,15 @@ conflicts_prefer(dplyr::filter)
 source(here("R","functions.R"))
 ro <- list() #all of the objects created by richs code... to avoid namespace collisions
 
+#This year's HOO list for BC-----------------------------------
 ro$hoo <- read_excel(here("data","LMO 2025E HOO Result.xlsx"), skip=3)|>
   select(noc_5=contains("code"),hoo=contains("HOO"))|>
   filter(hoo=="HOO BC")|>
   select(noc_5)|>
   mutate(noc_5=str_remove_all(noc_5, "#"))
 
+#'The skills data we provided to WorkBC--------------------------
+#'nested by skills_competencies, each nest containing a tibble with noc_5 and importance_score
 ro$skills <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.xlsx"))|>
   clean_names()|>
   mutate(noc_5=str_pad(noc2021, 5, pad="0"), .before="noc2021")|>
@@ -21,6 +26,8 @@ ro$skills <- read_excel(here("data","skills_data_for_career_profiles_2025-06-09.
   group_by(skills_competencies)|>
   nest(score_by_noc = c(noc_5, importance_score))
 
+#'The LFS data that was provided to Stokes--------------------------
+#'roll senior managers into a single non-standard noc 00018
 ro$hist_emp <- read_excel(here("data",
                             "Labour force status for 5 digit NOC (41229 split)2015-2024.xlsx"),
                        skip=3,
@@ -37,6 +44,7 @@ ro$hist_emp <- read_excel(here("data",
   group_by(noc_5, class_title, year, source)|>
   summarize(employed=sum(employed, na.rm=TRUE))
 
+#'The current LMO forecast of employment by occupation--------------------------
 ro$future_emp <- read_excel(here("data","employment_occupation.xlsx"), skip=3)|>
   filter(NOC !="#T",
          `Geographic Area`=="British Columbia")|>
@@ -49,17 +57,26 @@ ro$future_emp <- read_excel(here("data","employment_occupation.xlsx"), skip=3)|>
          source="LMO")|>
   select(noc_5, class_title=description, year, source, employed)
 
+#'Combine the historical and future employment data--------------------------
 ro$emp <- bind_rows(ro$hist_emp, ro$future_emp)
 
+#'A nested dataframe (for each year) that contains NOCs and their proportion of total employment--------------------------
 ro$emp_prop <- ro$emp|>
   group_by(year, source)|>
   mutate(prop= employed/sum(employed, na.rm=TRUE))|>
   select(-employed)|>
   nest(prop_by_noc=c(noc_5, class_title,  prop))
-
+#'Cross the skills and employment data--------------------------
+#'ro$skills is a nested dataframe with skills_competencies as the top level, and a
+#'data column that contains the skills scores by NOC.
+#'ro$emp_prop is a nested dataframe with year and source as the top level, and a
+#'data column that contains the employment proportions by NOC.
+#'we then join the skills by noc with the proportions by noc
 ro$joined <- crossing(ro$skills, ro$emp_prop)|>
   mutate(joined=map2(score_by_noc, prop_by_noc, inner_join))
 
+#'Now we can calculate the weighted average of skills for each skills_competency and year
+#'and then calculate the last value and the compound annual growth rate (CAGR) for each skills_competency and source
 ro$crossed <- ro$joined|>
   mutate(weighted_average=map_dbl(joined, rich_weighted_average))|>
   select(skills_competencies, year, source, weighted_average)|>
@@ -70,7 +87,8 @@ ro$crossed <- ro$joined|>
   )|>
   select(-data)
 
-#weighted means over time----------------------------------
+#'analysis of employment by TEER groupings----------------------------------
+#'This is to show broad shifts in labour market over time.
 
 ro$emp_teer <- ro$emp|>
   mutate(teer=str_sub(noc_5,2,2),
@@ -93,44 +111,50 @@ ro$emp_teer <- ro$emp|>
   })) |>
   unnest(data)
 
+#'Next we look at HOO vs not HOO skills
 ro$skills_unnested <- ro$skills|>
   unnest(score_by_noc)
 
+#'This is the skills data for non-hoo occupations
 ro$not_hoo <- ro$skills_unnested|>
   ungroup()|>
   select(noc_5)|>
   distinct()|>
   anti_join(ro$hoo)
 
+#'This is the most recent historical employment data--------------------------
 ro$most_recent_emp <- ro$hist_emp|>
   ungroup()|>
   filter(year==max(year))
 
+#' The employment proportions for HOO occupations----------------------
 ro$hoo_weights <- ro$most_recent_emp|>
   filter(noc_5 %in% ro$hoo$noc_5)|>
   mutate(prop=employed/sum(employed, na.rm=TRUE))|>
   select(noc_5, prop)
 
+#' The employment proportions for non-HOO occupations----------------------
 ro$not_hoo_weights <- ro$most_recent_emp|>
   filter(noc_5 %in% ro$not_hoo$noc_5)|>
   mutate(prop=employed/sum(employed, na.rm=TRUE))|>
   select(noc_5, prop)
 
+#'Now we can calculate the weighted average of skills for HOO occupations-----------------
 ro$hoo_skills <- ro$skills_unnested|>
   right_join(ro$hoo_weights, by="noc_5")|>
   group_by(skills_competencies)|>
   summarize(weighted_average = sum(importance_score * prop, na.rm = TRUE))|>
   mutate(group = "High Opportunity Occupations")|>
   na.omit()
-
+#'Now we can calculate the weighted average of skills for non-HOO occupations-----------------
 ro$not_hoo_skills <- ro$skills_unnested|>
   right_join(ro$not_hoo_weights, by="noc_5")|>
   group_by(skills_competencies)|>
   summarize(weighted_average = sum(importance_score * prop, na.rm = TRUE))|>
   mutate(group = "Other Occupations")
-
+#'Now we can combine the HOO and non-HOO skills data-----------------
 ro$skills <- bind_rows(ro$hoo_skills, ro$not_hoo_skills)
-
+#'Now we can calculate the differences between HOO and non-HOO skills-----------------
 ro$diffs <- ro$skills|>
   pivot_wider(names_from=group, values_from=weighted_average)|>
   mutate(absolute_diff = `High Opportunity Occupations` - `Other Occupations`,

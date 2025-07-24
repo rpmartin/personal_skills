@@ -134,7 +134,6 @@ plot_upper
 plot_lower
 ```
 
-
 ```{r, echo=FALSE, results='asis'}
 cat(rep("\n\n&nbsp;\n\n", 15), sep = "") #hack to force the table onto next page... can't do pagebreaks with bookdown
 ```

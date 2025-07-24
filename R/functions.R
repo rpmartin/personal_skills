@@ -1,4 +1,5 @@
 rich_weighted_average <- function(tbbl) {
+  #browser()
   tbbl %>%
     mutate(weighted_score = importance_score * prop) %>%
     summarize(weighted_average = sum(weighted_score, na.rm = TRUE)) %>%
