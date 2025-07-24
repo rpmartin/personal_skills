@@ -245,6 +245,8 @@ ro$diffs_plt2 <- ggplot(ro$diffs, aes(x=absolute_diff, y=fct_reorder(skills_comp
   theme_minimal() +
   theme(text=element_text(size=12))
 
+#save the data------------------------
+
 ro <- enframe(ro)|>
   filter(name %in% c("emp_teer", "crossed", "skills", "diffs",
               "emp_teer_plt", "crossed_plt1", "crossed_plt2",
