@@ -266,8 +266,5 @@ ro|>
   write.xlsx(file = here("out","skills_data.xlsx"))
 
 
-#
-
-
 
 
