@@ -7,6 +7,7 @@ library(vroom)
 library(here)
 library(readxl)
 library(tibble)
+library(openxlsx)
 
 # create list
 eo <- list()
@@ -143,7 +144,6 @@ skills_jo_df <- skills_df |>
 
 # Data Analysis and Summary
 
-
 # Step 1: Average importance per occupation-skill group (using first Openings_10yr per occupation)
 cluster_scores <- skills_jo_df %>%
   group_by(Occupation, Skill_Group, teer_group) %>%
@@ -159,40 +159,62 @@ quantile(cluster_scores$average_importance, probs = c(0.25, 0.5, 0.75))
 
 # Distribution charts of the raw and average importance skills
 
-# Combine raw and cluster-level scores
+# Step 1: Combine data
 combined_df <- bind_rows(
   skills_jo_df %>% mutate(type = "Individual Skill", score = Importance),
   cluster_scores %>% mutate(type = "Skill Cluster", score = average_importance)
 )
 
+# Step 2: Get percentiles in the Individual Skill distribution
+percentile_lookup <- ecdf(skills_jo_df$Importance)
+p25 <- percentile_lookup(25)
+p50 <- percentile_lookup(50)
+
+# Step 3: Map those percentiles to the Skill Cluster distribution
+mapped_thresholds <- quantile(cluster_scores$average_importance, probs = c(p25, p50), na.rm = TRUE)
+names(mapped_thresholds) <- c("Mapped_25", "Mapped_50")
+
+
+# Step 4: Create a data frame for vertical lines and labels
+vlines_df <- tibble(
+  type = c("Individual Skill", "Individual Skill", "Skill Cluster", "Skill Cluster"),
+  label = c("Score 25", "Score 50", 
+            paste0("Mapped: ", round(mapped_thresholds[1], 1)), 
+            paste0("Mapped: ", round(mapped_thresholds[2], 1))),
+  x = c(25, 50, mapped_thresholds[1], mapped_thresholds[2]),
+  linetype = c("25th", "50th", "25th", "50th")
+)
+
+# Step 5: Plot
 plot_dist <- ggplot(combined_df, aes(x = score, fill = type)) +
   geom_density(alpha = 0.5) +
-  geom_vline(xintercept = c(25, 50), linetype = "dashed", color = "red") +
-  labs(title = "Comparison of Skill Importance Distributions",
-       x = "Importance Score", y = "Density", fill = "Type")
+  geom_vline(data = vlines_df, aes(xintercept = x, linetype = linetype, color = type), size = 0.8) +
+  geom_text(
+    data = vlines_df,
+    aes(x = x, y = 0.002, label = label),  # Lowered y-position
+    angle = 90, vjust = -0.5, hjust = 0,
+    size = 3, color = "black", show.legend = FALSE
+  ) +
+  scale_linetype_manual(values = c("25th" = "dashed", "50th" = "dotted")) +
+  labs(
+    title = "Comparison of Skill Importance Distributions",
+    subtitle = "Vertical lines show original thresholds (Individual Skill) and their mapped equivalents (Skill Cluster)",
+    x = "Importance Score", y = "Density",
+    fill = "Type", linetype = "Percentile", color = "Type"
+  )
 
-# Commented out for review and removal
 
-# cluster_scores_unweighted <- skills_jo_df %>%
-#   group_by(Occupation, Skill_Group, teer_group) %>%
-#   summarise(
-#     unweighted_importance = mean(Importance, na.rm = TRUE),
-#     Openings_10yr = first(Openings_10yr),
-#     .groups = "drop"
-#   )
-# 
-# 
-# cluster_scores_check <- full_join(cluster_scores, cluster_scores_unweighted, by = c("Occupation", "Skill_Group", "teer_group", "Openings_10yr")) |>
-#   mutate(diff = round(abs(weighted_importance - unweighted_importance), 4)) |>
-#   arrange(desc(diff))
+plot_dist
+
 
 # Step 2: Categorize importance level
+# Categorize skill cluster scores based on mapped thresholds
 cluster_scores <- cluster_scores %>%
   mutate(
     Importance_Rank = case_when(
-      average_importance >= 50 ~ "Important",
-      average_importance >= 25 ~ "Moderately Important",
-      TRUE ~ "Less Important"
+      average_importance < mapped_thresholds["Mapped_25"] ~ "Less Important",
+      average_importance < mapped_thresholds["Mapped_50"] ~ "Moderately Important",
+      TRUE ~ "Important"
     )
   )
 
